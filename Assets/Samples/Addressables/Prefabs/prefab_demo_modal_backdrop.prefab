@@ -33,7 +33,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -90,6 +89,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8f61bcc81179c904d97880d6f8f5fdc9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _dontAddCanvasGroupAutomatically: 0
   _usePrefabNameAsIdentifier: 1
   _identifier: 
   _rectTransform: {fileID: 78457337265729855}
@@ -103,7 +103,7 @@ MonoBehaviour:
       _assetType: 0
       _animationBehaviour: {fileID: 0}
       _animationObject: {fileID: 0}
-  _closeModalWhenClicked: 0
+  _closeModalWhenClicked: 1
 --- !u!225 &3012687162618884780
 CanvasGroup:
   m_ObjectHideFlags: 0

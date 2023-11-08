@@ -83,13 +83,14 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
                     button.transition = Selectable.Transition.None;
                 }
 
+                button.onClick.RemoveAllListeners();
                 button.onClick.AddListener(CloseModalOnClick);
             }
             else
             {
                 if (TryGetComponent<Button>(out var button))
                 {
-                    button.onClick.RemoveListener(CloseModalOnClick);
+                    button.onClick.RemoveAllListeners();
                     Destroy(button);
                 }
             }
