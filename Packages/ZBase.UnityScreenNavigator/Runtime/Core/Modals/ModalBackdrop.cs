@@ -7,7 +7,7 @@ using ZBase.UnityScreenNavigator.Foundation;
 namespace ZBase.UnityScreenNavigator.Core.Modals
 {
     [RequireComponent(typeof(CanvasGroup))]
-    public sealed class ModalBackdrop : View
+    public class ModalBackdrop : View
     {
         [SerializeField] private ModalBackdropTransitionAnimationContainer _animationContainer;
         [SerializeField] private bool _closeModalWhenClicked;
@@ -95,7 +95,7 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             }
         }
 
-        private void CloseModalOnClick()
+        protected virtual void CloseModalOnClick()
         {
             var modalContainer = ModalContainer.Of(transform);
 
