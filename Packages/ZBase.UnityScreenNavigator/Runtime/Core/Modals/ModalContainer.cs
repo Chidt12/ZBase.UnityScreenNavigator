@@ -207,6 +207,19 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             return container;
         }
 
+        public static ModalContainer CreateByExistContainer(
+                WindowContainerConfig layerConfig
+                , IWindowContainerManager manager
+                , UnityScreenNavigatorSettings settings
+                , ModalContainer container
+            )
+        {
+            container.Initialize(layerConfig, manager, settings);
+            s_instancesCachedByName.Add(container.LayerName, container);
+
+            return container;
+        }
+
         /// <summary>
         /// Add a callback receiver.
         /// </summary>

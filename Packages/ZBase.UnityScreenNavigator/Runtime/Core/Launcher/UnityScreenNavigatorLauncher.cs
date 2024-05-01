@@ -12,6 +12,15 @@ namespace ZBase.UnityScreenNavigator.Core
     public class UnityScreenNavigatorLauncher : WindowContainerManager
     {
         [SerializeField]
+        private ModalContainer modalContainer;
+
+        [SerializeField]
+        private ScreenContainer screenContainer;
+
+        [SerializeField]
+        private ActivityContainer activityContainer;
+
+        [SerializeField]
         private UnityScreenNavigatorSettings unityScreenNavigatorSettings;
 
         [SerializeField, FormerlySerializedAs("containerLayerSettings")]
@@ -41,15 +50,15 @@ namespace ZBase.UnityScreenNavigator.Core
                 switch (layer.containerType)
                 {
                     case WindowContainerType.Modal:
-                        ModalContainer.Create(layer, this, unityScreenNavigatorSettings);
+                        ModalContainer.CreateByExistContainer(layer, this, unityScreenNavigatorSettings, modalContainer);
                         break;
 
                     case WindowContainerType.Screen:
-                        ScreenContainer.Create(layer, this, unityScreenNavigatorSettings);
+                        ScreenContainer.CreateByExistContainer(layer, this, unityScreenNavigatorSettings, screenContainer);
                         break;
 
                     case WindowContainerType.Activity:
-                        ActivityContainer.Create(layer, this, unityScreenNavigatorSettings);
+                        ActivityContainer.CreateByExistContainer(layer, this, unityScreenNavigatorSettings, activityContainer);
                         break;
                 }
             }

@@ -6,7 +6,7 @@ using ZBase.UnityScreenNavigator.Foundation;
 
 namespace ZBase.UnityScreenNavigator.Core.Windows
 {
-    [RequireComponent(typeof(RectMask2D), typeof(CanvasGroup))]
+    //[RequireComponent(typeof(RectMask2D), typeof(CanvasGroup))]
     public abstract class WindowContainerBase : ViewContainerBase, IWindowContainer
     {
         public string LayerName { get; private set; }
@@ -36,7 +36,7 @@ namespace ZBase.UnityScreenNavigator.Core.Windows
             
             var canvas = GetComponent<Canvas>();
 
-            if (config.overrideSorting)
+            if (canvas && config.overrideSorting)
             {
                 canvas.overrideSorting = true;
                 canvas.sortingLayerID = config.sortingLayer.id;
@@ -55,10 +55,13 @@ namespace ZBase.UnityScreenNavigator.Core.Windows
         {
             base.InitializePool();
 
-            var poolCanvas = PoolTransform.gameObject.GetOrAddComponent<Canvas>();
-            poolCanvas.overrideSorting = true;
-            poolCanvas.sortingLayerID = Canvas.sortingLayerID;
-            poolCanvas.sortingOrder = Canvas.sortingOrder;
+            if (Canvas)
+            {
+                var poolCanvas = PoolTransform.gameObject.GetOrAddComponent<Canvas>();
+                poolCanvas.overrideSorting = true;
+                poolCanvas.sortingLayerID = Canvas.sortingLayerID;
+                poolCanvas.sortingOrder = Canvas.sortingOrder;
+            }
         }
     }
 }

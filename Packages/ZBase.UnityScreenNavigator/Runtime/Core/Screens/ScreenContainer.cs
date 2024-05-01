@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
+using ZBase.UnityScreenNavigator.Core.Modals;
 using ZBase.UnityScreenNavigator.Core.Windows;
 using ZBase.UnityScreenNavigator.Foundation;
 using ZBase.UnityScreenNavigator.Foundation.Collections;
@@ -179,6 +180,19 @@ namespace ZBase.UnityScreenNavigator.Core.Screens
             container.Initialize(layerConfig, manager, settings);
 
             s_instancesCacheByName.Add(container.LayerName, container);
+            return container;
+        }
+
+        public static ScreenContainer CreateByExistContainer(
+            WindowContainerConfig layerConfig
+            , IWindowContainerManager manager
+            , UnityScreenNavigatorSettings settings
+            , ScreenContainer container
+        )
+        {
+            container.Initialize(layerConfig, manager, settings);
+            s_instancesCacheByName.Add(container.LayerName, container);
+
             return container;
         }
 
