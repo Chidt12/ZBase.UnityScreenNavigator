@@ -14,26 +14,18 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
 
         private Image _image;
         private float _originalAlpha;
+        protected Modal ownerModal;
 
         public ModalBackdropTransitionAnimationContainer AnimationContainer => _animationContainer;
 
         protected override void Awake()
         {
-            SetCloseModalOnClick(_closeModalWhenClicked);
-
             _image = GetComponent<Image>();
             _originalAlpha = _image ? _image.color.a : 1f;
         }
 
-        public void Setup(
-              RectTransform parent
-            , in float? alpha
-            , in bool? closeModalWhenClick
-        )
+        public void Setup(RectTransform parent)
         {
-            SetAlpha(alpha);
-            SetCloseModalOnClick(closeModalWhenClick);
-
             Parent = parent;
             RectTransform.FillParent(Parent);
             CanvasGroup.interactable = _closeModalWhenClicked;
@@ -41,7 +33,14 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             gameObject.SetActive(false);
         }
 
-        private void SetAlpha(in float? value)
+        public void SetOwnerModal(Modal ownerModal)
+        {
+            this.ownerModal = ownerModal;
+            SetAlpha();
+            SetClickEvent();
+        }
+
+        private void SetAlpha()
         {
             var image = _image;
 
@@ -52,51 +51,35 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
 
             var alpha = _originalAlpha;
 
-            if (value.HasValue)
-            {
-                alpha = value.Value;
-            }
+            if (ownerModal.DisableBackdropAlpha)
+                alpha = 0.0f;
 
             var color = image.color;
             color.a = alpha;
             image.color = color;
         }
 
-        private void SetCloseModalOnClick(in bool? value)
+        private void SetClickEvent()
         {
-            if (value.HasValue)
+            if (ownerModal.DisableBackdropClickable)
+                return;
+
+            if (!TryGetComponent<Button>(out var button))
             {
-                _closeModalWhenClicked = value.Value;
-            }
-
-            if (_closeModalWhenClicked)
-            {
-                if (TryGetComponent<Image>(out var image) == false)
-                {
-                    image = gameObject.AddComponent<Image>();
-                    image.color = Color.clear;
-                }
-
-                if (TryGetComponent<Button>(out var button) == false)
-                {
-                    button = gameObject.AddComponent<Button>();
-                    button.transition = Selectable.Transition.None;
-                }
-
+                button = gameObject.AddComponent<Button>();
+                button.transition = Selectable.Transition.None;
                 button.onClick.RemoveAllListeners();
-                button.onClick.AddListener(CloseModalOnClick);
-            }
-            else
-            {
-                if (TryGetComponent<Button>(out var button))
-                {
-                    button.onClick.RemoveAllListeners();
-                    Destroy(button);
-                }
+                button.onClick.AddListener(OnClickBackdrop);
             }
         }
 
-        protected virtual void CloseModalOnClick()
+        private void OnClickBackdrop()
+        {
+            if (ownerModal.CanCloseAsClickOnBackdrop)
+                CallClickBackdropEvent();
+        }
+
+        protected virtual void CallClickBackdropEvent()
         {
             var modalContainer = ModalContainer.Of(transform);
 

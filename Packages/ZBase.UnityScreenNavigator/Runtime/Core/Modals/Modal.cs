@@ -1,5 +1,6 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using ZBase.UnityScreenNavigator.Core.Windows;
 using ZBase.UnityScreenNavigator.Foundation;
@@ -10,6 +11,15 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
     [DisallowMultipleComponent]
     public class Modal : Window, IModalLifecycleEvent
     {
+        [Header("--- BACKDROP CUSTOMIZATION ---")]
+        [SerializeField]
+        private bool _disableBackdropClickable;
+        [SerializeField] [HideIf(nameof(_disableBackdropClickable))]
+        private bool _stillOpenEvenBackdropClicked;
+        [SerializeField]
+        private bool _disableBackdropAlpha;
+
+        [Header("--- MODAL ELEMENTS ---")]
         [SerializeField]
         private ModalTransitionAnimationContainer _animationContainer = new();
 
@@ -25,6 +35,30 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
         }
 
         public ModalTransitionAnimationContainer AnimationContainer => _animationContainer;
+
+        public bool DisableBackdropClickable
+        {
+            get
+            {
+                return _disableBackdropClickable;
+            }
+        }
+
+        public bool CanCloseAsClickOnBackdrop
+        {
+            get
+            {
+                return !_stillOpenEvenBackdropClicked;
+            }
+        }
+
+        public bool DisableBackdropAlpha
+        {
+            get
+            {
+                return _disableBackdropAlpha;
+            }
+        }
 
         public bool IsTransitioning { get; private set; }
 

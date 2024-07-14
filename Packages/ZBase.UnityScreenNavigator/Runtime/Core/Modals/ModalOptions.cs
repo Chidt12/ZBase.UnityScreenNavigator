@@ -4,21 +4,15 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
 {
     public readonly struct ModalOptions
     {
-        public readonly float? backdropAlpha;
-        public readonly bool? closeWhenClickOnBackdrop;
         public readonly string modalBackdropResourcePath;
         public readonly ViewOptions options;
 
         public ModalOptions(
               in ViewOptions options
-            , in float? backdropAlpha = null
-            , in bool? closeWhenClickOnBackdrop = null
             , string modalBackdropResourcePath = null
         )
         {
             this.options = options;
-            this.backdropAlpha = backdropAlpha;
-            this.closeWhenClickOnBackdrop = closeWhenClickOnBackdrop;
             this.modalBackdropResourcePath = modalBackdropResourcePath;
         }
 
@@ -27,15 +21,11 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             , bool playAnimation = true
             , OnViewLoadedCallback onLoaded = null
             , bool loadAsync = true
-            , in float? backdropAlpha = null
-            , in bool? closeWhenClickOnBackdrop = null
             , string modalBackdropResourcePath = null
             , PoolingPolicy poolingPolicy = PoolingPolicy.UseSettings
         )
         {
             this.options = new(resourcePath, playAnimation, onLoaded, loadAsync, poolingPolicy);
-            this.backdropAlpha = backdropAlpha;
-            this.closeWhenClickOnBackdrop = closeWhenClickOnBackdrop;
             this.modalBackdropResourcePath = modalBackdropResourcePath;
         }
 

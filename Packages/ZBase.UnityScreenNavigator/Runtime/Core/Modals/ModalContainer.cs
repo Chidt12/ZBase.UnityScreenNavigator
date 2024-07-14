@@ -409,7 +409,7 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
                 var backdropView = backdropAtIndex.View;
                 RectTransform.RemoveChild(backdropView.transform);
 
-                backdropView.Setup(RectTransform, options.backdropAlpha, options.closeWhenClickOnBackdrop);
+                backdropView.Setup(RectTransform);
                 backdropView.Settings = Settings;
 
                 _backdrops.Add(backdropAtIndex);
@@ -604,7 +604,7 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
                 );
 
                 backdrop = await GetViewAsync<ModalBackdrop>(backdropOptions);
-                backdrop.Setup(RectTransform, options.backdropAlpha, options.closeWhenClickOnBackdrop);
+                backdrop.Setup(RectTransform);
                 _backdrops.Add(new ViewRef<ModalBackdrop>(backdrop, backdropResourcePath, backdropOptions.poolingPolicy));
             }
 
@@ -648,6 +648,7 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             await enterModal.EnterAsync(true, options.options.playAnimation, exitModal);
 
             // End Transition
+            backdrop.SetOwnerModal(enterModal);
             _modals.Add(new ViewRef<Modal>(enterModal, resourcePath, options.options.poolingPolicy));
             IsInTransition = false;
 
