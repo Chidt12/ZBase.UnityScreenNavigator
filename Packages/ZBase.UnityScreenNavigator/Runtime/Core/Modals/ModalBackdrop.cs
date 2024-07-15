@@ -20,7 +20,7 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
 
         protected override void Awake()
         {
-            _image = GetComponent<Image>();
+            _image = GetComponentInChildren<Image>();
             _originalAlpha = _image ? _image.color.a : 1f;
         }
 
@@ -29,7 +29,6 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             Parent = parent;
             RectTransform.FillParent(Parent);
             CanvasGroup.interactable = _closeModalWhenClicked;
-
             gameObject.SetActive(false);
         }
 
@@ -45,9 +44,7 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             var image = _image;
 
             if (image == false)
-            {
                 return;
-            }
 
             var alpha = _originalAlpha;
 
@@ -62,14 +59,28 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
         private void SetClickEvent()
         {
             if (ownerModal.DisableBackdropClickable)
-                return;
-
-            if (!TryGetComponent<Button>(out var button))
             {
-                button = gameObject.AddComponent<Button>();
-                button.transition = Selectable.Transition.None;
-                button.onClick.RemoveAllListeners();
-                button.onClick.AddListener(OnClickBackdrop);
+                if (TryGetComponent<Button>(out var clickButton))
+                    clickButton.onClick.RemoveAllListeners();
+
+                if (_image == false)
+                    return;
+                _image.raycastTarget = false;
+
+                return;
+            }
+            else
+            {
+                if (!TryGetComponent<Button>(out var button))
+                {
+                    button = gameObject.AddComponent<Button>();
+                    button.transition = Selectable.Transition.None;
+                    button.onClick.RemoveAllListeners();
+                    button.onClick.AddListener(OnClickBackdrop);
+                }
+                if (_image == false)
+                    return;
+                _image.raycastTarget = true;
             }
         }
 

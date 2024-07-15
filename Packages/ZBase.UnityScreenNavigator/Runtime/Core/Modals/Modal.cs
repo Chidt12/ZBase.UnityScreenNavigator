@@ -1,10 +1,10 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
-using Sirenix.OdinInspector;
 using UnityEngine;
 using ZBase.UnityScreenNavigator.Core.Windows;
 using ZBase.UnityScreenNavigator.Foundation;
 using ZBase.UnityScreenNavigator.Foundation.PriorityCollection;
+using Sirenix.OdinInspector;
 
 namespace ZBase.UnityScreenNavigator.Core.Modals
 {
@@ -14,8 +14,11 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
         [Header("--- BACKDROP CUSTOMIZATION ---")]
         [SerializeField]
         private bool _disableBackdropClickable;
-        [SerializeField] [HideIf(nameof(_disableBackdropClickable))]
+
+        [HideIf(nameof(_disableBackdropClickable))]
+        [SerializeField]
         private bool _stillOpenEvenBackdropClicked;
+
         [SerializeField]
         private bool _disableBackdropAlpha;
 
