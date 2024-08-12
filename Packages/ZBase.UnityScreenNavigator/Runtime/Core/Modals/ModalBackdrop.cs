@@ -62,12 +62,6 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             {
                 if (TryGetComponent<Button>(out var clickButton))
                     clickButton.onClick.RemoveAllListeners();
-
-                if (_image == false)
-                    return;
-                _image.raycastTarget = false;
-
-                return;
             }
             else
             {
@@ -78,9 +72,6 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
                     button.onClick.RemoveAllListeners();
                     button.onClick.AddListener(OnClickBackdrop);
                 }
-                if (_image == false)
-                    return;
-                _image.raycastTarget = true;
             }
         }
 
