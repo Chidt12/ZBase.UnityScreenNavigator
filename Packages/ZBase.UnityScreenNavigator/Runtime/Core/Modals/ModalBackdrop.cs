@@ -68,10 +68,11 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
                 if (!TryGetComponent<Button>(out var button))
                 {
                     button = gameObject.AddComponent<Button>();
-                    button.transition = Selectable.Transition.None;
-                    button.onClick.RemoveAllListeners();
-                    button.onClick.AddListener(OnClickBackdrop);
                 }
+
+                button.transition = Selectable.Transition.None;
+                button.onClick.RemoveAllListeners();
+                button.onClick.AddListener(OnClickBackdrop);
             }
         }
 

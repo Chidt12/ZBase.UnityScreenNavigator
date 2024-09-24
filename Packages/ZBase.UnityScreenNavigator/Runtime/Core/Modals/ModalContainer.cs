@@ -648,7 +648,11 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             await enterModal.EnterAsync(true, options.options.playAnimation, exitModal);
 
             // End Transition
-            backdrop.SetOwnerModal(enterModal);
+            
+            if (backdrop)
+            {
+                backdrop.SetOwnerModal(enterModal);
+            }
             _modals.Add(new ViewRef<Modal>(enterModal, resourcePath, options.options.poolingPolicy));
             IsInTransition = false;
 
