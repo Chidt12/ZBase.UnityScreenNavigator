@@ -11,8 +11,8 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
     {
         [SerializeField] private ModalBackdropTransitionAnimationContainer _animationContainer;
         [SerializeField] private bool _closeModalWhenClicked;
-
-        private Image _image;
+        [SerializeField] private Button _closeButton;
+        [SerializeField] private Image _image;
         private float _originalAlpha;
         protected Modal ownerModal;
 
@@ -20,7 +20,6 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
 
         protected override void Awake()
         {
-            _image = GetComponentInChildren<Image>();
             _originalAlpha = _image ? _image.color.a : 1f;
         }
 
@@ -60,29 +59,19 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
         {
             if (ownerModal.DisableBackdropClickable)
             {
-                if (TryGetComponent<Button>(out var clickButton))
-                    clickButton.onClick.RemoveAllListeners();
-
-                if (_image == false)
-                    return;
-                _image.raycastTarget = false;
-
+                if (_closeButton)
+                    _closeButton.onClick.RemoveAllListeners();
                 return;
             }
             else
             {
-                if (!TryGetComponent<Button>(out var button))
+                if(_closeButton)
                 {
-                    button = gameObject.AddComponent<Button>();
+                    var button = _closeButton;
+                    button.transition = Selectable.Transition.None;
+                    button.onClick.RemoveAllListeners();
+                    button.onClick.AddListener(OnClickBackdrop);
                 }
-
-                button.transition = Selectable.Transition.None;
-                button.onClick.RemoveAllListeners();
-                button.onClick.AddListener(OnClickBackdrop);
-
-				if (_image == false)
-                    return;
-                _image.raycastTarget = true;
             }
         }
 
