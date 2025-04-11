@@ -68,7 +68,7 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             {
                 var closeButtonImage = _closeButton.GetComponentInChildren<Image>();
                 if(closeButtonImage)
-                    closeButtonImage.raycastTarget = false;
+                    closeButtonImage.raycastTarget = true;
                 _image.raycastTarget = true;
             }
 
