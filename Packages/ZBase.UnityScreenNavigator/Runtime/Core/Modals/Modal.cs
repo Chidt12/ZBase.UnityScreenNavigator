@@ -15,6 +15,9 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
         [SerializeField]
         private bool _disableBackdropClickable;
 
+        [SerializeField]
+        private bool _canClickThroughBackdrop;
+
         [HideIf(nameof(_disableBackdropClickable))]
         [SerializeField]
         private bool _stillOpenEvenBackdropClicked;
@@ -52,6 +55,14 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             get
             {
                 return !_stillOpenEvenBackdropClicked;
+            }
+        }
+
+        public bool CanClickThroughBackdrop
+        {
+            get
+            {
+                return _canClickThroughBackdrop;
             }
         }
 

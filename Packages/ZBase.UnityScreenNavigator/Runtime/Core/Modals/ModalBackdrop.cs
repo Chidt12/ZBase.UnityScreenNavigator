@@ -57,11 +57,25 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
 
         private void SetClickEvent()
         {
+            if(ownerModal.CanClickThroughBackdrop)
+            {
+                var closeButtonImage = _closeButton.GetComponentInChildren<Image>();
+                if(closeButtonImage)
+                    closeButtonImage.raycastTarget = false;
+                _image.raycastTarget = false;
+            }
+            else
+            {
+                var closeButtonImage = _closeButton.GetComponentInChildren<Image>();
+                if(closeButtonImage)
+                    closeButtonImage.raycastTarget = false;
+                _image.raycastTarget = true;
+            }
+
             if (ownerModal.DisableBackdropClickable)
             {
                 if (_closeButton)
                     _closeButton.onClick.RemoveAllListeners();
-                return;
             }
             else
             {
