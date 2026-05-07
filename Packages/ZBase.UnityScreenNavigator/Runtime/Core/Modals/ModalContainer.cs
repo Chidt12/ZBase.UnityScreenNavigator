@@ -609,6 +609,12 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             }
 
             var enterModal = await GetViewAsync<TModal>(options.options);
+
+            if (backdrop)
+            {
+                backdrop.SetOwnerModal(enterModal);
+            }
+
             options.options.onLoaded?.Invoke(enterModal, args);
 
             await enterModal.AfterLoadAsync(RectTransform, args);
@@ -648,11 +654,7 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             await enterModal.EnterAsync(true, options.options.playAnimation, exitModal);
 
             // End Transition
-            
-            if (backdrop)
-            {
-                backdrop.SetOwnerModal(enterModal);
-            }
+        
             _modals.Add(new ViewRef<Modal>(enterModal, resourcePath, options.options.poolingPolicy));
             IsInTransition = false;
 
