@@ -19,8 +19,21 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
         private readonly List<IModalContainerCallbackReceiver> _callbackReceivers = new();
         private readonly List<ViewRef<Modal>> _modals = new();
         private readonly List<ViewRef<ModalBackdrop>> _backdrops = new();
+        private readonly Dictionary<string, Queue<InitializedModalEntry>> _initializedModalCache = new();
 
         private bool _disableBackdrop;
+
+        private readonly struct InitializedModalEntry
+        {
+            public readonly ViewRef<Modal> ModalRef;
+            public readonly ViewRef<ModalBackdrop>? BackdropRef;
+
+            public InitializedModalEntry(ViewRef<Modal> modalRef, ViewRef<ModalBackdrop>? backdropRef)
+            {
+                ModalRef = modalRef;
+                BackdropRef = backdropRef;
+            }
+        }
 
         /// <summary>
         /// True if in transition.
@@ -78,6 +91,19 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             }
 
             backdrops.Clear();
+            foreach (var (_, queue) in _initializedModalCache)
+            {
+                while (queue.Count > 0)
+                {
+                    var entry = queue.Dequeue();
+                    DestroyAndForget(entry.ModalRef);
+                    if (entry.BackdropRef.HasValue)
+                    {
+                        DestroyAndForget(entry.BackdropRef.Value);
+                    }
+                }
+            }
+            _initializedModalCache.Clear();
 
             s_instancesCachedByName.Remove(LayerName);
 
@@ -561,6 +587,28 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             await PushAsyncInternal<Modal>(options, args);
         }
 
+        /// <summary>
+        /// Preload and initialize one modal instance for later use.
+        /// The next PushAsync with the same resource path will consume this prepared instance
+        /// without running Initialize again.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async UniTask PreloadAndInitializeAsync(ModalOptions options, params object[] args)
+        {
+            await PreloadAndInitializeAsyncInternal<Modal>(options, args);
+        }
+
+        /// <summary>
+        /// Preload and initialize one modal instance for later use.
+        /// The next PushAsync with the same resource path will consume this prepared instance
+        /// without running Initialize again.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async UniTask PreloadAndInitializeAsync(ModalOptions options, Memory<object> args = default)
+        {
+            await PreloadAndInitializeAsyncInternal<Modal>(options, args);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async UniTaskVoid PushAndForget<TModal>(ModalOptions options, Memory<object> args)
             where TModal : Modal
@@ -585,46 +633,67 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             }
 
             IsInTransition = true;
-            
+
             if (Settings.EnableInteractionInTransition == false)
             {
                 Interactable = false;
             }
 
+            var usePreparedModal = TryDequeueInitializedModal(resourcePath, out var preparedEntry);
+            Modal enterModal;
             ModalBackdrop backdrop = null;
+            ViewRef<ModalBackdrop>? backdropRef = null;
 
-            if (_disableBackdrop == false)
+            if (usePreparedModal)
             {
-                var backdropResourcePath = GetBackdropResourcePath(options.modalBackdropResourcePath);
-                var backdropOptions = new ViewOptions(
-                      resourcePath: backdropResourcePath
-                    , playAnimation: options.options.playAnimation
-                    , loadAsync: options.options.loadAsync
-                    , poolingPolicy: PoolingPolicy.UseSettings
-                );
+                enterModal = preparedEntry.ModalRef.View;
+                enterModal.Settings = Settings;
+                enterModal.gameObject.SetActive(false);
 
-                backdrop = await GetViewAsync<ModalBackdrop>(backdropOptions);
-                backdrop.Setup(RectTransform);
-                _backdrops.Add(new ViewRef<ModalBackdrop>(backdrop, backdropResourcePath, backdropOptions.poolingPolicy));
+                if (preparedEntry.BackdropRef.HasValue)
+                {
+                    backdropRef = preparedEntry.BackdropRef;
+                    backdrop = backdropRef.Value.View;
+                    backdrop.Settings = Settings;
+                    backdrop.Setup(RectTransform);
+                    backdrop.SetOwnerModal(enterModal);
+                }
             }
-
-            var enterModal = await GetViewAsync<TModal>(options.options);
-
-            if (backdrop)
+            else
             {
-                backdrop.SetOwnerModal(enterModal);
+                if (_disableBackdrop == false)
+                {
+                    var backdropResourcePath = GetBackdropResourcePath(options.modalBackdropResourcePath);
+                    var backdropOptions = new ViewOptions(
+                          resourcePath: backdropResourcePath
+                        , playAnimation: options.options.playAnimation
+                        , loadAsync: options.options.loadAsync
+                        , poolingPolicy: PoolingPolicy.UseSettings
+                    );
+
+                    backdrop = await GetViewAsync<ModalBackdrop>(backdropOptions);
+                    backdrop.Setup(RectTransform);
+                    backdropRef = new ViewRef<ModalBackdrop>(backdrop, backdropResourcePath, backdropOptions.poolingPolicy);
+                }
+
+                enterModal = await GetViewAsync<TModal>(options.options);
+
+                if (backdrop)
+                {
+                    backdrop.SetOwnerModal(enterModal);
+                }
+
+                options.options.onLoaded?.Invoke(enterModal, args);
+
+                await enterModal.AfterLoadAsync(RectTransform, args);
             }
-
-            options.options.onLoaded?.Invoke(enterModal, args);
-
-            await enterModal.AfterLoadAsync(RectTransform, args);
 
             var exitModal = _modals.Count == 0 ? null : _modals[^1].View;
 
             if (exitModal)
             {
                 exitModal.Settings = Settings;
-            }    
+            }
 
             // Preprocess
             foreach (var callbackReceiver in _callbackReceivers)
@@ -654,7 +723,11 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             await enterModal.EnterAsync(true, options.options.playAnimation, exitModal);
 
             // End Transition
-        
+            if (backdropRef.HasValue)
+            {
+                _backdrops.Add(backdropRef.Value);
+            }
+
             _modals.Add(new ViewRef<Modal>(enterModal, resourcePath, options.options.poolingPolicy));
             IsInTransition = false;
 
@@ -670,11 +743,97 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             {
                 callbackReceiver.AfterPush(enterModal, exitModal, args);
             }
-            
+
             if (Settings.EnableInteractionInTransition == false)
             {
                 Interactable = true;
             }
+        }
+
+        private async UniTask PreloadAndInitializeAsyncInternal<TModal>(ModalOptions options, Memory<object> args)
+            where TModal : Modal
+        {
+            var resourcePath = options.options.resourcePath;
+            if (resourcePath == null)
+            {
+                throw new ArgumentNullException(nameof(resourcePath));
+            }
+
+            if (_initializedModalCache.TryGetValue(resourcePath, out var preparedQueue) && preparedQueue.Count > 0)
+            {
+                return;
+            }
+
+            ModalBackdrop backdrop = null;
+            ViewRef<ModalBackdrop>? backdropRef = null;
+
+            if (_disableBackdrop == false)
+            {
+                var backdropResourcePath = GetBackdropResourcePath(options.modalBackdropResourcePath);
+                var backdropOptions = new ViewOptions(
+                      resourcePath: backdropResourcePath
+                    , playAnimation: options.options.playAnimation
+                    , loadAsync: options.options.loadAsync
+                    , poolingPolicy: PoolingPolicy.UseSettings
+                );
+                backdrop = await GetViewAsync<ModalBackdrop>(backdropOptions);
+                backdrop.Setup(RectTransform);
+                backdropRef = new ViewRef<ModalBackdrop>(backdrop, backdropResourcePath, backdropOptions.poolingPolicy);
+            }
+
+            var modal = await GetViewAsync<TModal>(options.options);
+            modal.gameObject.SetActive(false);
+            if (modal.CanvasGroup) modal.CanvasGroup.alpha = 0f;
+            if (backdrop)
+            {
+                backdrop.SetOwnerModal(modal);
+                backdrop.gameObject.SetActive(false);
+                if (backdrop.CanvasGroup) backdrop.CanvasGroup.alpha = 0f;
+            }
+
+            options.options.onLoaded?.Invoke(modal, args);
+            await modal.AfterLoadAsync(RectTransform, args);
+
+            modal.gameObject.SetActive(false);
+            if (modal.CanvasGroup) modal.CanvasGroup.alpha = 0f;
+
+            if (backdrop)
+            {
+                backdrop.gameObject.SetActive(false);
+                if (backdrop.CanvasGroup) backdrop.CanvasGroup.alpha = 0f;
+            }
+
+            EnqueueInitializedModal(resourcePath, new InitializedModalEntry(
+                new ViewRef<Modal>(modal, resourcePath, options.options.poolingPolicy),
+                backdropRef
+            ));
+        }
+
+        private void EnqueueInitializedModal(string resourcePath, InitializedModalEntry entry)
+        {
+            if (_initializedModalCache.TryGetValue(resourcePath, out var queue) == false)
+            {
+                queue = new Queue<InitializedModalEntry>();
+                _initializedModalCache[resourcePath] = queue;
+            }
+
+            queue.Enqueue(entry);
+        }
+
+        private bool TryDequeueInitializedModal(string resourcePath, out InitializedModalEntry entry)
+        {
+            if (_initializedModalCache.TryGetValue(resourcePath, out var queue) && queue.Count > 0)
+            {
+                entry = queue.Dequeue();
+                if (queue.Count == 0)
+                {
+                    _initializedModalCache.Remove(resourcePath);
+                }
+                return true;
+            }
+
+            entry = default;
+            return false;
         }
 
         /// <summary>
@@ -686,7 +845,7 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
         {
             PopAndForget(playAnimation, args).Forget();
         }
-        
+
         /// <summary>
         /// Push an instance of <see cref="Modal"/>.
         /// </summary>
@@ -738,7 +897,7 @@ namespace ZBase.UnityScreenNavigator.Core.Modals
             }
 
             IsInTransition = true;
-            
+
             if (Settings.EnableInteractionInTransition == false)
             {
                 Interactable = false;
