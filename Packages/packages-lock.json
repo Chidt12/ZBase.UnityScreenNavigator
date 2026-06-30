@@ -135,7 +135,7 @@
       }
     },
     "com.zbase.unityscreennavigator": {
-      "version": "file:ZBase.UnityScreenNavigator",
+      "version": "file:com.zbase.unityscreennavigator",
       "depth": 0,
       "source": "embedded",
       "dependencies": {
