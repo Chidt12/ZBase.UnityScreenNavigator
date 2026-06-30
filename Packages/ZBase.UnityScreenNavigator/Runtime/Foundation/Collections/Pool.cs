@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using ZBase.UnityScreenNavigator.Foundation.Animation;
 
 namespace ZBase.UnityScreenNavigator.Foundation
 {
@@ -11,9 +12,7 @@ namespace ZBase.UnityScreenNavigator.Foundation
 
         private readonly Queue<T> _queue = new();
 
-        /// <seealso href="https://docs.unity3d.com/Manual/DomainReloading.html"/>
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void Init()
+        internal static void Reset()
         {
             s_shared = new();
         }
@@ -23,5 +22,16 @@ namespace ZBase.UnityScreenNavigator.Foundation
 
         public void Return(T instance)
             => _queue.Enqueue(instance);
+    }
+
+    internal static class PoolInitializer
+    {
+        /// <seealso href="https://docs.unity3d.com/Manual/DomainReloading.html"/>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void Init()
+        {
+            Pool<AnimationPlayer>.Reset();
+            Pool<List<string>>.Reset();
+        }
     }
 }
